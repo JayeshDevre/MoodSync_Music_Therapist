@@ -30,9 +30,11 @@ class Recommender:
 
     def __init__(self, songs: List[Song]):
         """Store the song catalog for repeated recommendation calls."""
+        self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
         """Return the top-k Song objects ranked by score_song against the given UserProfile."""
+        user_prefs = {
             "genre":        user.favorite_genre,
             "mood":         user.favorite_mood,
             "energy":       user.target_energy,
@@ -49,6 +51,7 @@ class Recommender:
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
         """Return a human-readable string of reasons why a song was recommended."""
+        user_prefs = {
             "genre":        user.favorite_genre,
             "mood":         user.favorite_mood,
             "energy":       user.target_energy,

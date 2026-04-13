@@ -99,16 +99,15 @@ After every song is scored, the list is sorted in descending order and the top K
 
 ## Sample Output
 
-Running `python -m src.main` with the default pop/happy profile:
+Running `python -m src.main` produces results for six profiles — three standard and three adversarial edge cases.
+
+### Profile 1: High-Energy Pop
 
 ```
-Loaded songs: 18
-
-────────────────────────────────────────────────────
-  🎵  Top 5 Recommendations
-  Profile: pop · happy · energy 0.85
-────────────────────────────────────────────────────
-
+══════════════════════════════════════════════════════
+  🎵  Profile 1: High-Energy Pop
+  genre=pop  mood=happy  energy=0.85
+──────────────────────────────────────────────────────
   #1  Sunrise City  —  Neon Echo
        Score : 6.92 / 7.00
        Why   : genre match, mood match, close energy, close valence, close danceability, close acousticness
@@ -128,11 +127,175 @@ Loaded songs: 18
   #5  Groove Architect  —  Funky Dimension
        Score : 3.73 / 7.00
        Why   : close energy, close valence, close danceability, close acousticness
-
-────────────────────────────────────────────────────
+══════════════════════════════════════════════════════
 ```
 
-The results match expectations: Sunrise City ranks first because it hits every signal (genre, mood, and all four numeric features). Gym Hero ranks second — same genre but mood is "intense" not "happy", costing it the +1.0 mood bonus. Rooftop Lights is tagged "indie pop" so it misses the genre match but earns the mood point and scores well on numeric proximity.
+Sunrise City nails every signal (6.92/7.00). Gym Hero loses the mood bonus (+1.0) because it's tagged "intense" not "happy", dropping it to 5.67.
+
+---
+
+### Profile 2: Chill Lofi
+
+```
+══════════════════════════════════════════════════════
+  ☁️   Profile 2: Chill Lofi
+  genre=lofi  mood=chill  energy=0.4
+──────────────────────────────────────────────────────
+  #1  Midnight Coding  —  LoRoom
+       Score : 6.88 / 7.00
+       Why   : genre match, mood match, close energy, close valence, close danceability, close acousticness
+
+  #2  Library Rain  —  Paper Lanterns
+       Score : 6.83 / 7.00
+       Why   : genre match, mood match, close energy, close valence, close danceability, close acousticness
+
+  #3  Focus Flow  —  LoRoom
+       Score : 5.97 / 7.00
+       Why   : genre match, close energy, close valence, close danceability, close acousticness
+
+  #4  Spacewalk Thoughts  —  Orbit Bloom
+       Score : 4.50 / 7.00
+       Why   : mood match, close energy, close valence
+
+  #5  Coffee Shop Stories  —  Slow Stereo
+       Score : 3.70 / 7.00
+       Why   : close energy, close valence, close danceability, close acousticness
+══════════════════════════════════════════════════════
+```
+
+The three lofi tracks dominate. Spacewalk Thoughts (ambient/chill) sneaks in at #4 on mood match alone — a cross-genre recommendation that actually makes sense.
+
+---
+
+### Profile 3: Deep Intense Rock
+
+```
+══════════════════════════════════════════════════════
+  🤘  Profile 3: Deep Intense Rock
+  genre=rock  mood=intense  energy=0.92
+──────────────────────────────────────────────────────
+  #1  Storm Runner  —  Voltline
+       Score : 6.76 / 7.00
+       Why   : genre match, mood match, close energy, close valence, close danceability, close acousticness
+
+  #2  Gym Hero  —  Max Pulse
+       Score : 4.29 / 7.00
+       Why   : mood match, close energy, close acousticness
+
+  #3  Shatter the Crown  —  Iron Veil
+       Score : 3.83 / 7.00
+       Why   : close energy, close valence, close danceability, close acousticness
+
+  #4  Night Drive Loop  —  Neon Echo
+       Score : 3.36 / 7.00
+       Why   : close valence, close acousticness
+
+  #5  Concrete Jungle  —  Asphalt Kings
+       Score : 3.35 / 7.00
+       Why   : close energy, close acousticness
+══════════════════════════════════════════════════════
+```
+
+Only one rock song in the catalog so #1 is a lock. The gap between #1 (6.76) and #2 (4.29) shows how much the genre bonus matters.
+
+---
+
+### Edge Case 1: High Energy + Conflicting Mood
+
+```
+══════════════════════════════════════════════════════
+  ⚡  Edge Case 1: High Energy + Sad Mood (conflicting signals)
+  genre=classical  mood=melancholic  energy=0.9
+──────────────────────────────────────────────────────
+  #1  Moonlit Sonata  —  Clara Voss
+       Score : 5.81 / 7.00
+       Why   : genre match, mood match, close valence, close danceability, close acousticness
+
+  #2  Shatter the Crown  —  Iron Veil
+       Score : 2.94 / 7.00
+       Why   : close energy, close valence
+
+  #3  Storm Runner  —  Voltline
+       Score : 2.80 / 7.00
+       Why   : close energy
+
+  #4  Night Drive Loop  —  Neon Echo
+       Score : 2.62 / 7.00
+       Why   : close energy
+
+  #5  Spacewalk Thoughts  —  Orbit Bloom
+       Score : 2.52 / 7.00
+       Why   : close danceability, close acousticness
+══════════════════════════════════════════════════════
+```
+
+Interesting result: Moonlit Sonata wins despite having energy=0.22 (vs. target 0.90) because the genre+mood categorical bonus (3.0 pts) overwhelms the energy penalty. The system is "tricked" — it recommends a very quiet classical piece to someone who asked for high energy. This confirms the genre dominance bias noted in the README.
+
+---
+
+### Edge Case 2: Genre Ghost (no catalog match)
+
+```
+══════════════════════════════════════════════════════
+  👻  Edge Case 2: Genre ghost (no matching genre in catalog)
+  genre=ambient  mood=angry  energy=0.95
+──────────────────────────────────────────────────────
+  #1  Shatter the Crown  —  Iron Veil
+       Score : 4.51 / 7.00
+       Why   : mood match, close energy, close acousticness
+
+  #2  Spacewalk Thoughts  —  Orbit Bloom
+       Score : 3.43 / 7.00
+       Why   : genre match
+
+  #3  Storm Runner  —  Voltline
+       Score : 3.34 / 7.00
+       Why   : close energy, close acousticness
+
+  #4  Concrete Jungle  —  Asphalt Kings
+       Score : 3.30 / 7.00
+       Why   : close energy, close danceability, close acousticness
+
+  #5  Gym Hero  —  Max Pulse
+       Score : 3.29 / 7.00
+       Why   : close energy, close danceability, close acousticness
+══════════════════════════════════════════════════════
+```
+
+The mood "angry" only exists on Shatter the Crown, so it wins on mood match + energy proximity. Spacewalk Thoughts (the only ambient song) ranks #2 purely on genre match despite being the polar opposite in energy — another example of categorical weight overriding numeric fit.
+
+---
+
+### Edge Case 3: All-Middle Preferences (no strong signal)
+
+```
+══════════════════════════════════════════════════════
+  🎭  Edge Case 3: All-middle preferences (no strong signal)
+  genre=reggae  mood=nostalgic  energy=0.5
+──────────────────────────────────────────────────────
+  #1  Dusty Backroads  —  The Hollow Pines
+       Score : 4.39 / 7.00
+       Why   : mood match, close energy, close danceability
+
+  #2  Midnight Coding  —  LoRoom
+       Score : 3.57 / 7.00
+       Why   : close energy, close valence, close danceability
+
+  #3  Focus Flow  —  LoRoom
+       Score : 3.48 / 7.00
+       Why   : close energy, close valence, close danceability
+
+  #4  Velvet Midnight  —  Sable June
+       Score : 3.43 / 7.00
+       Why   : close energy, close acousticness
+
+  #5  Library Rain  —  Paper Lanterns
+       Score : 3.34 / 7.00
+       Why   : close energy, close valence, close danceability
+══════════════════════════════════════════════════════
+```
+
+With no genre match possible (reggae isn't in the catalog) and only one mood match, the ranking becomes a pure numeric proximity race. Scores cluster tightly between 3.34–4.39, showing the system has low confidence — all results feel equally mediocre.
 
 ---
 
