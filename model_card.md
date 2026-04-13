@@ -61,14 +61,13 @@ Prompts:
 
 ## 6. Limitations and Bias 
 
-Where the system struggles or behaves unfairly. 
+The most significant weakness is the **single-song genre trap**. Thirteen of the fifteen genres in the catalog appear exactly once. This means a user who prefers rock, jazz, metal, or folk will always get the same song at #1 regardless of how well its numeric features actually match — the +1.0 genre bonus (or +2.0 in the original weights) is unbeatable when there is only one competitor. The system does not discover variety; it just locks onto the one catalog entry that shares a label.
 
-Prompts:  
+A related problem is the **energy asymmetry bias**. The catalog's mean energy is 0.61, and the energy feature carries the highest numeric weight (×1.5 or ×3.0 in the experiment). Low-energy users (target ≈ 0.30) have only 8 songs within a 0.20 proximity window, while high-energy users (target ≈ 0.85) have 9 — roughly equal coverage. However, because energy is weighted so heavily, a song that is 0.30 off on energy loses up to 0.45–0.90 points depending on the weight setting, which can push genuinely good matches out of the top 5 entirely.
 
-- Features it does not consider  
-- Genres or moods that are underrepresented  
-- Cases where the system overfits to one preference  
-- Ways the scoring might unintentionally favor some users  
+The **binary mood penalty** is another hard edge. Mood is treated as an exact string match — "chill" either equals "chill" or it scores zero. There is no partial credit for moods that are semantically close (relaxed ≈ chill, euphoric ≈ happy, angry ≈ intense). A user who wants "relaxed" music will never get the mood bonus on any song in the catalog, because "relaxed" appears only once. This creates a silent filter bubble: users with less common mood preferences are quietly penalized without any explanation in the output.
+
+Finally, the system has **no diversity enforcement**. The top-k results are always the closest matches, which means a lofi listener will get three lofi songs in a row (the entire lofi section of the catalog) before any cross-genre discovery happens. In a real product this would feel repetitive and would fail to surface songs the user might enjoy but has never considered.
 
 ---
 

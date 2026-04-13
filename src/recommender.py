@@ -79,22 +79,29 @@ def load_songs(csv_path: str) -> List[Dict]:
 
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """Score a song against user preferences: +2.0 genre, +1.0 mood, weighted numeric proximity."""
+    """Score a song against user preferences: +1.0 genre, +1.0 mood, weighted numeric proximity.
+
+    Experiment — Weight Shift:
+      genre  halved : 2.0 → 1.0  (less categorical dominance)
+      energy doubled: 1.5 → 3.0  (numeric feel matters more)
+    New max possible score: 1.0 + 1.0 + 3.0 + 1.0 + 0.75 + 0.75 = 7.5
+    Math check: all weights positive, similarity in [0,1] → score always in [0, 7.5] ✓
+    """
     score = 0.0
     reasons: List[str] = []
 
-    # --- categorical ---
+    # --- categorical (genre halved to reduce dominance) ---
     if song.get("genre", "").lower() == user_prefs.get("genre", "").lower():
-        score += 2.0
+        score += 1.0          # was 2.0
         reasons.append("genre match")
 
     if song.get("mood", "").lower() == user_prefs.get("mood", "").lower():
         score += 1.0
         reasons.append("mood match")
 
-    # --- continuous similarity ---
+    # --- continuous similarity (energy doubled to amplify feel signal) ---
     numeric_weights = [
-        ("energy",       "energy",       1.50),
+        ("energy",       "energy",       3.00),   # was 1.50
         ("valence",      "valence",      1.00),
         ("danceability", "danceability", 0.75),
         ("acousticness", "acousticness", 0.75),
