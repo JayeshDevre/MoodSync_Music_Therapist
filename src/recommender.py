@@ -3,10 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Song:
-    """
-    Represents a song and its attributes.
-    Required by tests/test_recommender.py
-    """
+    """Dataclass representing a song and its audio feature attributes."""
     id: int
     title: str
     artist: str
@@ -20,10 +17,7 @@ class Song:
 
 @dataclass
 class UserProfile:
-    """
-    Represents a user's taste preferences.
-    Required by tests/test_recommender.py
-    """
+    """Dataclass representing a listener's taste preferences used for scoring."""
     favorite_genre: str
     favorite_mood: str
     target_energy: float
@@ -32,15 +26,13 @@ class UserProfile:
     target_acousticness: float
 
 class Recommender:
-    """
-    OOP implementation of the recommendation logic.
-    Required by tests/test_recommender.py
-    """
+    """OOP wrapper around score_song that ranks catalog songs for a given UserProfile."""
+
     def __init__(self, songs: List[Song]):
-        self.songs = songs
+        """Store the song catalog for repeated recommendation calls."""
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        user_prefs = {
+        """Return the top-k Song objects ranked by score_song against the given UserProfile."""
             "genre":        user.favorite_genre,
             "mood":         user.favorite_mood,
             "energy":       user.target_energy,
@@ -56,7 +48,7 @@ class Recommender:
         return scored[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        user_prefs = {
+        """Return a human-readable string of reasons why a song was recommended."""
             "genre":        user.favorite_genre,
             "mood":         user.favorite_mood,
             "energy":       user.target_energy,
@@ -68,10 +60,7 @@ class Recommender:
         return ", ".join(reasons) if reasons else "general match"
 
 def load_songs(csv_path: str) -> List[Dict]:
-    """
-    Loads songs from a CSV file.
-    Required by src/main.py
-    """
+    """Parse songs.csv into a list of dicts with numeric fields cast to float."""
     import csv
     songs = []
     with open(csv_path, newline="", encoding="utf-8") as f:
@@ -87,23 +76,7 @@ def load_songs(csv_path: str) -> List[Dict]:
 
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """
-    Scores a single song against user preferences.
-
-    Algorithm Recipe
-    ----------------
-    Categorical (binary):
-      +2.0  genre match
-      +1.0  mood match
-
-    Continuous similarity  (weight × (1 - |song - target|)):
-      ×1.50  energy       — biggest driver of perceived intensity
-      ×1.00  valence      — emotional tone
-      ×0.75  danceability — groove feel
-      ×0.75  acousticness — organic vs. electronic texture
-
-    Max possible score: 7.0
-    """
+    """Score a song against user preferences: +2.0 genre, +1.0 mood, weighted numeric proximity."""
     score = 0.0
     reasons: List[str] = []
 
@@ -133,15 +106,14 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
-    """
-    Functional implementation of the recommendation logic.
-    Returns top-k songs as (song_dict, score, explanation).
-    """
-    scored = []
-    for song in songs:
-        score, reasons = score_song(user_prefs, song)
-        explanation = ", ".join(reasons) if reasons else "general match"
-        scored.append((song, score, explanation))
-
-    scored.sort(key=lambda x: x[1], reverse=True)
+    """Score every song in the catalog, sort descending, and return the top-k as (song, score, explanation)."""
+    scored = sorted(
+        (
+            (song, score, ", ".join(reasons) if reasons else "general match")
+            for song in songs
+            for score, reasons in (score_song(user_prefs, song),)
+        ),
+        key=lambda x: x[1],
+        reverse=True,
+    )
     return scored[:k]

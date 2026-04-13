@@ -97,6 +97,43 @@ After every song is scored, the list is sorted in descending order and the top K
 
 - **Tempo is ignored.** `tempo_bpm` is loaded but not scored. A 168 BPM metal track and a 72 BPM lofi track could score identically if their other features happen to align.
 
+## Sample Output
+
+Running `python -m src.main` with the default pop/happy profile:
+
+```
+Loaded songs: 18
+
+────────────────────────────────────────────────────
+  🎵  Top 5 Recommendations
+  Profile: pop · happy · energy 0.85
+────────────────────────────────────────────────────
+
+  #1  Sunrise City  —  Neon Echo
+       Score : 6.92 / 7.00
+       Why   : genre match, mood match, close energy, close valence, close danceability, close acousticness
+
+  #2  Gym Hero  —  Max Pulse
+       Score : 5.67 / 7.00
+       Why   : genre match, close energy, close valence, close danceability, close acousticness
+
+  #3  Rooftop Lights  —  Indigo Parade
+       Score : 4.66 / 7.00
+       Why   : mood match, close energy, close valence, close danceability
+
+  #4  Neon Horizon  —  Pulse Array
+       Score : 3.74 / 7.00
+       Why   : close energy, close valence, close danceability, close acousticness
+
+  #5  Groove Architect  —  Funky Dimension
+       Score : 3.73 / 7.00
+       Why   : close energy, close valence, close danceability, close acousticness
+
+────────────────────────────────────────────────────
+```
+
+The results match expectations: Sunrise City ranks first because it hits every signal (genre, mood, and all four numeric features). Gym Hero ranks second — same genre but mood is "intense" not "happy", costing it the +1.0 mood bonus. Rooftop Lights is tagged "indie pop" so it misses the genre match but earns the mood point and scores well on numeric proximity.
+
 ---
 
 ## Getting Started

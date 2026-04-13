@@ -1,40 +1,38 @@
 """
 Command line runner for the Music Recommender Simulation.
-
-This file helps you quickly run and test your recommender.
-
-You will implement the functions in recommender.py:
-- load_songs
-- score_song
-- recommend_songs
 """
 
 from recommender import load_songs, recommend_songs
 
 
 def main() -> None:
-    songs = load_songs("data/songs.csv") 
+    songs = load_songs("data/songs.csv")
+    print(f"Loaded songs: {len(songs)}")
 
-    # Taste profile: a chill lofi listener who prefers organic, low-energy tracks
+    # Taste profile: upbeat pop listener who wants happy, high-energy tracks
     user_prefs = {
-        "genre":        "lofi",
-        "mood":         "chill",
-        "energy":       0.40,   # low-mid intensity
-        "valence":      0.60,   # neutral-positive tone
-        "danceability": 0.60,   # moderate groove
-        "acousticness": 0.75,   # organic/textured sound
+        "genre":        "pop",
+        "mood":         "happy",
+        "energy":       0.85,   # high energy
+        "valence":      0.85,   # bright, positive tone
+        "danceability": 0.80,   # danceable
+        "acousticness": 0.15,   # produced, not acoustic
     }
 
     recommendations = recommend_songs(user_prefs, songs, k=5)
 
-    print("\nTop recommendations:\n")
-    for rec in recommendations:
-        # You decide the structure of each returned item.
-        # A common pattern is: (song, score, explanation)
-        song, score, explanation = rec
-        print(f"{song['title']} - Score: {score:.2f}")
-        print(f"Because: {explanation}")
-        print()
+    width = 52
+    print(f"\n{'─' * width}")
+    print(f"  🎵  Top {len(recommendations)} Recommendations")
+    print(f"  Profile: {user_prefs['genre']} · {user_prefs['mood']} · energy {user_prefs['energy']}")
+    print(f"{'─' * width}")
+
+    for rank, (song, score, explanation) in enumerate(recommendations, start=1):
+        print(f"\n  #{rank}  {song['title']}  —  {song['artist']}")
+        print(f"       Score : {score:.2f} / 7.00")
+        print(f"       Why   : {explanation}")
+
+    print(f"\n{'─' * width}\n")
 
 
 if __name__ == "__main__":
