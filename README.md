@@ -101,6 +101,12 @@ After every song is scored, the list is sorted in descending order and the top K
 
 Running `python -m src.main` produces results for six profiles — three standard and three adversarial edge cases.
 
+### Terminal Screenshots
+
+![Profile 1 & 2 — High-Energy Pop and Chill Lofi](screenshots/image.png)
+
+![Profile 3 & Edge Cases — Deep Intense Rock, Conflicting Signals, Genre Ghost, All-Middle](screenshots/Screenshot%202026-04-12%20at%2010.18.22%20PM.png)
+
 ### Profile 1: High-Energy Pop
 
 ```
