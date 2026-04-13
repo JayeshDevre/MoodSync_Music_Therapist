@@ -73,16 +73,17 @@ Finally, the system has **no diversity enforcement**. The top-k results are alwa
 
 ## 7. Evaluation  
 
-How you checked whether the recommender behaved as expected. 
+I tested six user profiles in total — three standard and three adversarial edge cases designed to stress-test the scoring logic.
 
-Prompts:  
+The three standard profiles were: a high-energy pop listener (genre=pop, mood=happy, energy=0.85), a chill lofi listener (genre=lofi, mood=chill, energy=0.40), and a deep intense rock listener (genre=rock, mood=intense, energy=0.92). For all three, the top result was exactly what you would expect — Sunrise City, Midnight Coding, and Storm Runner respectively. Each of those songs matched both the genre and mood label, and their numeric features were close to the target. This confirmed the basic logic was working.
 
-- Which user profiles you tested  
-- What you looked for in the recommendations  
-- What surprised you  
-- Any simple tests or comparisons you ran  
+What surprised me was how quickly the scores dropped after #1. For the rock profile, Storm Runner scored 6.76 but #2 Gym Hero only scored 4.29 — a gap of 2.47 points. That gap exists entirely because there is only one rock song in the catalog. The genre bonus is worth so much that no other song can get close without it. In a real app with thousands of songs, this would not be a problem. But in an 18-song catalog it means the system is essentially making one confident recommendation and then guessing for the rest.
 
-No need for numeric metrics unless you created some.
+The three edge cases revealed more interesting behavior. The most surprising result was Edge Case 1: when I asked for classical/melancholic music but set energy to 0.90 (very high), the system still recommended Moonlit Sonata — a very quiet piano piece. It won because the genre and mood labels matched, and those categorical bonuses outweighed the fact that the song's energy (0.22) was almost the opposite of what I asked for. This showed that the system can be "tricked" by its own label-matching logic into recommending something that feels completely wrong.
+
+Edge Case 2 (the genre ghost) showed what happens when the user's preferred genre barely exists in the catalog. With genre=ambient and mood=angry, the system correctly ranked Shatter the Crown first on energy and mood proximity — but Spacewalk Thoughts (the only ambient song) still appeared at #2 purely because of the genre label, despite being a quiet, peaceful track. Halving the genre weight in the experiment pushed Spacewalk Thoughts off the list entirely, which felt like a more honest result.
+
+Edge Case 3 (all-middle preferences, unknown genre) was the most revealing. With every numeric feature set to 0.50 and a genre that does not exist in the catalog, the scores clustered tightly between 3.34 and 4.39. The system had no strong signal to work with and the results felt arbitrary. This is the scenario where a real recommender would fall back to popularity or editorial curation — our system has no such fallback.
 
 ---
 
