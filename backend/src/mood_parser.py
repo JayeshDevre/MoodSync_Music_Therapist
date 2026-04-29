@@ -18,7 +18,7 @@ _client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.environ["OPENROUTER_API_KEY"],
 )
-_MODEL = "liquid/lfm-2.5-1.2b-instruct:free"
+_MODEL = "openai/gpt-oss-20b:free"
 
 SYSTEM_PROMPT = "You are a music therapist assistant. You analyze emotional states and return structured JSON only. No markdown, no explanation, just raw JSON."
 

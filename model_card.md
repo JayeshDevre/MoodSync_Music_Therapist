@@ -1,95 +1,119 @@
-# 🎧 Model Card: VibeFinder 1.0
+# Model Card: MoodSync — AI Music Therapist
 
 ## 1. Model Name
-
-VibeFinder 1.0
+MoodSync v1.0
 
 ---
 
 ## 2. Intended Use
 
-VibeFinder is a content-based music recommender built for classroom exploration. It is not a real product. It is designed to show how a simple scoring algorithm can turn a listener's stated preferences into a ranked list of song suggestions.
+MoodSync is an AI music recommendation system that takes natural language emotional input and returns science-backed song recommendations with grounded explanations. It is designed as a portfolio project demonstrating RAG, agentic workflows, and reliability testing in a full-stack AI system.
 
-It assumes the user can describe what they want in advance — a preferred genre, a mood, and rough numeric targets for energy, tone, groove, and texture. It works best as a learning tool for understanding how features, weights, and ranking interact. It should not be used to make real music recommendations for real users.
+Intended users: anyone who wants music matched to their current emotional state without manually selecting genre or mood filters.
 
-Non-intended uses: production music apps, personalized streaming, any context where fairness or diversity of results actually matters to a listener's experience.
+Non-intended uses: clinical music therapy, mental health diagnosis, or any context requiring medically validated recommendations.
 
 ---
 
-## 3. How the Model Works
+## 3. How the System Works
 
-Every song in the catalog gets a score. The score is made up of two parts.
+MoodSync uses a multi-step pipeline:
 
-The first part is label matching. If a song's genre matches what the user asked for, it gets 1 point (originally 2 points before the weight experiment). If the mood matches, it gets another point. These are all-or-nothing — either the label matches exactly or it scores zero.
+1. **Mood Parser** — sends user's natural language input to an LLM (via OpenRouter) with a music therapist persona. Returns a structured JSON mood vector: `{ mood, energy, valence, danceability, acousticness, genre_hint }`.
 
-The second part is numeric closeness. For four features — energy, emotional tone (valence), danceability, and acousticness — the system measures how far the song's value is from what the user wants. A perfect match scores the full weight for that feature. The further away the song is, the fewer points it earns. Energy is weighted the most because it has the biggest effect on how a song feels.
+2. **RAG Retriever** — embeds the user query using `sentence-transformers/all-MiniLM-L6-v2` (local), searches a FAISS index over 6 music psychology knowledge base documents, and returns the top 3 most relevant research chunks.
 
-Once every song has a score, they are sorted from highest to lowest and the top five are returned. The system also generates a short explanation for each result, listing which features were close matches.
+3. **Song Scorer** — the original rule-based scoring engine from the prototype. Scores 18 songs against the mood vector using weighted feature similarity. Energy is weighted 3x, genre/mood matches add categorical bonuses.
+
+4. **Agentic Self-Critique Loop** — sends top 5 candidates + RAG context to the LLM for critique. Checks genre diversity, energy flow, and mood alignment. Re-ranks with genre penalty if critique fails. Max 2 retries.
+
+5. **Explainer** — generates a 2-sentence explanation per song, grounded in the retrieved research docs. The LLM must cite the context — it cannot hallucinate freely.
+
+6. **Confidence Scorer** — `score = 0.6 × match_score + 0.4 × rag_relevance`. Assigns HIGH / MEDIUM / LOW and flags low confidence picks.
+
+7. **Logger** — writes full decision trace to `logs/session.jsonl` for every session.
 
 ---
 
 ## 4. Data
 
-The catalog has 18 songs. Each song has a title, artist, genre, mood, and five numeric features: energy, tempo, valence, danceability, and acousticness. All numeric features are on a 0 to 1 scale except tempo, which is in BPM and is not used in scoring.
+**Song catalog:** 18 songs across 15 genres. Each song has title, artist, genre, mood, energy, tempo, valence, danceability, and acousticness. All numeric features are 0–1 except tempo (BPM, not used in scoring).
 
-The catalog covers 15 genres and 14 moods, but most appear only once. Lofi is the most represented genre with 3 songs. Chill is the most common mood with 3 songs. The catalog skews toward Western popular music styles and does not include classical Indian, Latin, African, or other global genres. No songs were added or removed from the starter dataset.
+**Knowledge base:** 6 markdown documents covering music psychology research — tempo and mood, acousticness and anxiety, energy and focus, valence and emotion, genre-mood mapping, danceability and wellbeing. Written specifically for this project based on established music therapy principles.
 
-The biggest data limitation is size. With only 18 songs, the system cannot provide meaningful variety for most genre preferences. A real recommender would need thousands of songs to avoid the single-song genre trap described in the limitations section.
+**Limitations:** 18 songs is very small. Most genres appear only once, meaning genre matching is often a single-song race. A production system would need thousands of songs.
 
 ---
 
 ## 5. Strengths
 
-The system works well when the user's preferences are specific and the catalog has good coverage for that preference. The lofi/chill profile is the clearest example — three songs match the genre, all three score well, and the results feel genuinely appropriate for someone who wants background study music.
-
-The explanation feature is a real strength. Every recommendation comes with a plain-language reason (genre match, mood match, close energy, etc.), which makes the system transparent. A user can immediately see why a song was recommended and whether they agree with the reasoning.
-
-The system is also fast and simple to modify. Changing a weight takes one line of code, and the effect on rankings is immediately visible. This makes it a good tool for understanding how weight choices shape outcomes.
+- Natural language input removes friction — users don't need to know music terminology
+- RAG grounds every explanation in research rather than hallucination
+- Agentic loop catches homogeneous picks and enforces diversity
+- Full audit trail via session logging — every decision is traceable
+- Graceful degradation — every component has fallbacks, system never crashes on API failure
+- Confidence scoring makes uncertainty visible to the user
 
 ---
 
 ## 6. Limitations and Bias
 
-The most significant weakness is the single-song genre trap. Thirteen of the fifteen genres in the catalog appear exactly once. This means a user who prefers rock, jazz, metal, or folk will always get the same song at #1 regardless of how well its numeric features actually match. The genre bonus is unbeatable when there is only one competitor. The system does not discover variety; it just locks onto the one catalog entry that shares a label.
+**Small catalog bias:** With 18 songs, 13 of 15 genres appear only once. A genre match is almost always a single-song win regardless of numeric fit. This is inherited from the original prototype and would require a larger dataset to fix.
 
-A related problem is the energy asymmetry bias. Energy carries the highest numeric weight (×1.5 in the final version). A song that is 0.30 off on energy loses up to 0.45 points, which can push genuinely good matches out of the top 5 entirely. Because energy is so heavily weighted, the system is really a high-energy song finder with genre and mood as tiebreakers.
+**Energy dominance:** Energy is weighted 3x in the scorer. Songs that are far off on energy get heavily penalized even if they match well on every other dimension. This makes the system better at matching intensity than nuance.
 
-The binary mood penalty is another hard edge. Mood is treated as an exact string match with no partial credit for moods that are semantically close — relaxed, chill, and peaceful are all treated as completely different. Users with less common mood preferences are quietly penalized without any explanation in the output.
+**Genre hint mismatch:** The mood parser suggests a genre hint but the catalog may not have songs in that genre. When the hint doesn't match any catalog song, the system falls back to pure numeric scoring which can produce unexpected results.
 
-Finally, the system has no diversity enforcement. The top results are always the closest matches, so a lofi listener gets all three lofi songs before any cross-genre discovery happens. In a real product this would feel repetitive fast.
+**LLM rate limits:** The free-tier LLM (OpenRouter) has a 50 requests/day limit. When exhausted, the mood parser falls back to neutral defaults, making all recommendations identical. This is a deployment constraint, not a logic flaw, but it affects reliability in demo settings.
 
----
-
-## 7. Evaluation
-
-I tested six user profiles in total — three standard and three adversarial edge cases designed to stress-test the scoring logic.
-
-The three standard profiles were: a high-energy pop listener (genre=pop, mood=happy, energy=0.85), a chill lofi listener (genre=lofi, mood=chill, energy=0.40), and a deep intense rock listener (genre=rock, mood=intense, energy=0.92). For all three, the top result was exactly what you would expect — Sunrise City, Midnight Coding, and Storm Runner respectively. Each of those songs matched both the genre and mood label, and their numeric features were close to the target. This confirmed the basic logic was working.
-
-What surprised me was how quickly the scores dropped after #1. For the rock profile, Storm Runner scored 6.76 but #2 Gym Hero only scored 4.29 — a gap of 2.47 points. That gap exists entirely because there is only one rock song in the catalog. In a real app with thousands of songs this would not be a problem, but in an 18-song catalog it means the system makes one confident recommendation and then guesses for the rest.
-
-The most surprising edge case result: when I asked for classical/melancholic music but set energy to 0.90, the system still recommended Moonlit Sonata — a very quiet piano piece with energy of 0.22. It won because the genre and mood labels matched, and those categorical bonuses outweighed the energy mismatch entirely. This showed the system can be tricked by its own label-matching logic into recommending something that feels completely wrong.
-
-I also ran a weight-shift experiment: halving the genre bonus (2.0 → 1.0) and doubling the energy weight (1.5 → 3.0). The genre ghost edge case improved — the quiet ambient song stopped appearing for a high-energy angry profile. But the classical/melancholic edge case still misbehaved, just with a smaller margin. Categorical bonuses still dominated when both genre and mood matched.
+**Western music bias:** The catalog covers Western popular genres only. No classical Indian, Latin, African, or other global music traditions are represented.
 
 ---
 
-## 8. Future Work
+## 7. Evaluation and Testing
 
-Add soft genre similarity. Instead of a binary genre match, group genres into families (lofi/ambient/jazz = low-energy organic; metal/rock/electronic = high-energy produced) and award partial points for adjacent genres. This would reduce the single-song genre trap and produce more interesting cross-genre recommendations.
+**Automated eval (tests/eval.py):** 10 fixed mood inputs, 5 checks each.
+- Result: 40/41 checks passed (98%)
+- Failed check: genre coverage — caused by LLM rate limit exhaustion during testing, not a logic error
+- All confidence, mood alignment, RAG retrieval, and agent stability checks passed 10/10
 
-Add a diversity penalty. After scoring, check if the top results are all from the same genre or artist and swap in a lower-ranked but different song. This would make the list feel less like a retrieval query and more like an actual recommendation.
+**Confidence scoring:** Average confidence score 0.55 (MEDIUM range) across normal sessions. No all-LOW picks in standard mood inputs. HIGH confidence triggered on strong genre + energy matches.
 
-Replace binary mood matching with a mood distance table. Define a small matrix where "relaxed" is close to "chill" and "euphoric" is close to "happy," and award partial points based on that distance. This would stop silently penalizing users whose preferred mood appears rarely in the catalog.
+**Human evaluation:** 5 manual checks — stressed→lofi, happy→pop, workout→pop, nostalgic→folk, angry→rock. All 5 passed when LLM was available.
+
+**What worked:** RAG retrieval was accurate from first test. Agentic loop passed on first attempt for most inputs. Fallback handling worked correctly throughout.
+
+**What didn't work:** Free-tier rate limits caused neutral fallback during heavy testing. Small LLM couldn't produce valid JSON arrays for multi-song prompts — had to switch to per-song calls.
 
 ---
 
-## 9. Personal Reflection
+## 8. AI Collaboration Reflection
 
-The biggest learning moment was the weight-shift experiment. I expected halving the genre weight to make the recommendations more diverse and more accurate. It did improve one edge case (the genre ghost), but it barely changed the others. That told me the problem was not just the weights — it was the binary nature of the categorical matching itself. No matter how much you reduce the genre bonus, a song that matches the genre label will always beat a song that does not, even if the non-matching song is a better fit in every other way. Fixing that requires a different approach entirely, not just a number change.
+**One instance where AI was helpful:**
+When designing the RAG retriever, the AI suggested using cosine similarity via FAISS `IndexFlatIP` with L2 normalization rather than Euclidean distance. This was the right call — cosine similarity is more appropriate for semantic text embeddings because it measures directional similarity rather than magnitude. Without that suggestion I would have used the default Euclidean index and gotten worse retrieval results.
 
-Using AI tools helped most during the implementation phase. The scoring loop, the CSV parser, and the sorted comprehension all came together quickly. Where I needed to double-check was in the bias analysis — the AI suggested several potential issues, but I had to run the actual catalog distribution numbers myself to confirm which ones were real. The single-song genre trap only became obvious when I counted that 13 of 15 genres appear exactly once. That is not something you can see from reading the code.
+**One instance where AI was flawed:**
+The AI initially suggested calling the LLM once with all 5 songs in a single prompt for the explainer, returning a JSON array. This failed repeatedly — the small free-tier model couldn't reliably produce valid JSON arrays for 5 songs at once. The AI kept suggesting minor prompt tweaks rather than recognizing the fundamental issue: the model was too small for that output format. The fix required stepping back and switching to per-song calls with plain text output, which the AI didn't suggest until explicitly pushed.
 
-What surprised me most was how much the results felt like real recommendations even though the algorithm is just arithmetic. Sunrise City ranking first for a happy pop listener, Midnight Coding for a chill lofi listener — those feel right. The system is not intelligent; it is just measuring distance. But distance in the right feature space produces outputs that match human intuition surprisingly often. The cases where it fails (Moonlit Sonata for a high-energy user) are the ones where the feature space does not capture what the user actually means.
+---
 
-If I extended this project, I would want to try collaborative filtering alongside the content-based approach — not to replace it, but to use it as a tiebreaker when the content scores are close. The all-middle edge case (where scores clustered between 3.34 and 4.39 with no clear winner) is exactly the situation where knowing what similar users listened to next would make a real difference.
+## 9. Ethics and Responsible Design
+
+**Could this be misused?**
+The system recommends music based on emotional state. A bad actor could theoretically use it to keep users in negative emotional states (e.g., always recommending sad music to someone who says they're sad) rather than helping them regulate. The current design partially addresses this through the valence-based scoring — it doesn't just match current mood, it considers what music would be therapeutically appropriate.
+
+**What surprised me in testing:**
+The most surprising finding was how well the system worked even when the LLM was rate-limited and fell back to neutral defaults. The RAG retrieval and rule-based scorer still returned reasonable results — lofi and ambient tracks for neutral inputs. This showed that the deterministic components carry more weight than expected, and the LLM is primarily responsible for personalization rather than basic correctness.
+
+**Transparency:**
+Every recommendation shows the RAG sources used, the confidence score, and the agent's reasoning. Users can see exactly why each song was picked. This is a deliberate design choice — the system should be explainable, not a black box.
+
+---
+
+## 10. Future Work
+
+- Expand catalog to 500+ songs via Spotify API integration
+- Add soft genre similarity (genre families instead of exact match)
+- Implement session memory so the agent remembers previous preferences
+- Add diversity enforcement to prevent all-same-genre results
+- Replace free-tier LLM with a locally hosted model (Ollama) to eliminate rate limit issues

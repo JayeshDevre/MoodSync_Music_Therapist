@@ -1,5 +1,11 @@
 # MoodSync — AI Music Therapist
 
+## Demo
+
+▶ [Watch the demo on Loom](https://www.loom.com/share/9abc95eda8714914bbefe000d398fed1)
+
+---
+
 ## Title and Summary
 
 MoodSync is a full-stack AI music recommendation system that takes how you're feeling in plain English and returns science-backed song picks with grounded explanations. Instead of asking you to pick a genre or mood from a dropdown, it understands natural language like "I'm overwhelmed and can't focus" and reasons about what music would actually help — citing real music psychology research for every recommendation.
@@ -348,7 +354,27 @@ The agentic loop was the most interesting component to build. Watching the agent
 
 ---
 
-## Tech Stack
+## Reflection and Ethics
+
+### Limitations and Biases
+
+The catalog has only 18 songs — 13 of 15 genres appear exactly once. This means genre matching is almost always a single-song race, regardless of how well the song actually fits numerically. Energy is weighted 3x in the scorer, making the system better at matching intensity than emotional nuance. The catalog covers Western popular music only — no global music traditions are represented.
+
+### Could This Be Misused?
+
+A bad actor could use the system to keep users in negative emotional states by always matching sad music to sad inputs rather than helping them regulate. The current design partially addresses this — the valence scoring considers therapeutic appropriateness, not just mood matching. A production version would need explicit guardrails around this.
+
+### What Surprised Me in Testing
+
+The most surprising finding was how well the system worked even when the LLM was rate-limited and fell back to neutral defaults. The RAG retrieval and rule-based scorer still returned reasonable results. This showed the deterministic components carry more weight than expected — the LLM is primarily responsible for personalization, not basic correctness.
+
+### AI Collaboration
+
+**Helpful:** When building the RAG retriever, the AI suggested using cosine similarity via FAISS `IndexFlatIP` with L2 normalization rather than Euclidean distance. This was the right call — cosine similarity is more appropriate for semantic text embeddings. Without that suggestion I would have used the default index and gotten worse retrieval results.
+
+**Flawed:** The AI initially suggested calling the LLM once with all 5 songs in a single prompt for the explainer, returning a JSON array. This failed repeatedly — the small free-tier model couldn't produce valid JSON arrays for 5 songs. The AI kept suggesting minor prompt tweaks rather than recognizing the fundamental issue: the model was too small for that output format. The fix required switching to per-song plain text calls, which the AI didn't suggest until explicitly pushed.
+
+---
 
 | Layer | Technology |
 |---|---|

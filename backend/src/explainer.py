@@ -19,7 +19,7 @@ _client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.environ["OPENROUTER_API_KEY"],
 )
-_MODEL = "liquid/lfm-2.5-1.2b-instruct:free"
+_MODEL = "openai/gpt-oss-20b:free"
 
 EXPLAIN_PROMPT = """You are a music therapist. In exactly 2 sentences, explain why this song suits someone feeling {mood}.
 Use the research context to ground your explanation. Mention specific audio features like tempo, energy, or acousticness.

@@ -23,7 +23,7 @@ _client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.environ["OPENROUTER_API_KEY"],
 )
-_MODEL = "liquid/lfm-2.5-1.2b-instruct:free"
+_MODEL = "openai/gpt-oss-20b:free"
 
 MAX_RETRIES = 2
 
