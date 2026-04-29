@@ -30,13 +30,15 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <span className="logo">🎵 MoodSync</span>
-        <span className="tagline">AI Music Therapist</span>
+        <div className="header-left">
+          <div className="logo-icon">🎵</div>
+          <span className="logo-text">Mood<span>Sync</span></span>
+          <span className="header-tag">AI Music Therapist</span>
+        </div>
       </header>
-
       <main className="app-body">
         <ChatPanel onSubmit={handleSubmit} loading={loading} error={error} result={result} />
-        {result && <ResultsPanel result={result} />}
+        <ResultsPanel result={result} loading={loading} />
       </main>
     </div>
   )

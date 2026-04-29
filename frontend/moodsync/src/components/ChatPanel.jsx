@@ -1,28 +1,46 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './ChatPanel.css'
 
 const SUGGESTIONS = [
-  "I'm stressed and can't focus",
-  "Feeling happy, want to dance",
-  "Exhausted after a long day",
-  "Need motivation for a workout",
-  "Feeling nostalgic and reflective",
+  { icon: '😰', text: "I'm stressed and can't focus" },
+  { icon: '💃', text: 'Feeling happy, want to dance' },
+  { icon: '😴', text: 'Exhausted, need to wind down' },
+  { icon: '💪', text: 'Need energy for a workout' },
+  { icon: '🌧️', text: 'Feeling nostalgic and reflective' },
 ]
 
 export default function ChatPanel({ onSubmit, loading, error, result }) {
   const [input, setInput] = useState('')
-  const [history, setHistory] = useState([])
+  const [messages, setMessages] = useState([])
+  const bottomRef = useRef(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  // When result arrives, add AI response to messages
+  useEffect(() => {
+    if (result && messages.length > 0 && messages[messages.length - 1].role === 'user') {
+      setMessages(m => [...m, { role: 'ai', result }])
+    }
+  }, [result])
+
+  useEffect(() => {
+    if (error && messages.length > 0 && messages[messages.length - 1].role === 'user') {
+      setMessages(m => [...m, { role: 'error', text: error }])
+    }
+  }, [error])
 
   function handleSend() {
     const text = input.trim()
     if (!text || loading) return
-    setHistory(h => [...h, { role: 'user', text }])
+    setMessages(m => [...m, { role: 'user', text }])
     setInput('')
     onSubmit(text)
   }
 
-  function handleSuggestion(s) {
-    setInput(s)
+  function handleSuggestion(text) {
+    setInput(text)
   }
 
   function handleKey(e) {
@@ -32,77 +50,95 @@ export default function ChatPanel({ onSubmit, loading, error, result }) {
     }
   }
 
-  // Add AI response to history when result arrives
-  const lastUserMsg = history[history.length - 1]
-  const showAiResponse = result && lastUserMsg?.role === 'user'
-
   return (
     <div className="chat-panel">
       <div className="chat-messages">
-        {history.length === 0 && (
+        {messages.length === 0 && (
           <div className="chat-welcome">
-            <div className="welcome-icon">🎧</div>
-            <p>Tell me how you're feeling and I'll find the perfect music for your mood.</p>
+            <div className="welcome-avatar">🎧</div>
+            <div className="welcome-title">How are you feeling?</div>
+            <p className="welcome-sub">
+              Describe your mood and I'll find music that fits — backed by music psychology research.
+            </p>
+            <div className="suggestions-label">Try one of these</div>
             <div className="suggestions">
               {SUGGESTIONS.map(s => (
-                <button key={s} className="suggestion-chip" onClick={() => handleSuggestion(s)}>
-                  {s}
+                <button key={s.text} className="suggestion-chip" onClick={() => handleSuggestion(s.text)}>
+                  <span>{s.icon}</span>
+                  <span>{s.text}</span>
+                  <span className="chip-arrow">→</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {history.map((msg, i) => (
-          <div key={i} className={`message message-${msg.role}`}>
-            <span className="message-bubble">{msg.text}</span>
-          </div>
-        ))}
+        {messages.map((msg, i) => {
+          if (msg.role === 'user') return (
+            <div key={i} className="message message-user">
+              <div className="message-meta">You</div>
+              <div className="message-bubble">{msg.text}</div>
+            </div>
+          )
+
+          if (msg.role === 'ai') return (
+            <div key={i} className="message message-ai">
+              <div className="message-meta">MoodSync</div>
+              <div className="message-bubble">
+                <div className="ai-intro">
+                  Found <strong>{msg.result.recommendations.length} songs</strong> for your{' '}
+                  <strong>{msg.result.mood.mood}</strong> mood ↓
+                </div>
+                <div className="mood-pills">
+                  <span className="mood-pill accent">{msg.result.mood.genre_hint}</span>
+                  <span className="mood-pill">energy {Math.round(msg.result.mood.energy * 100)}%</span>
+                  <span className="mood-pill">valence {Math.round(msg.result.mood.valence * 100)}%</span>
+                  {msg.result.agent_retries > 0 && (
+                    <span className="mood-pill">↺ reranked</span>
+                  )}
+                </div>
+                {msg.result.needs_clarification && (
+                  <span className="clarify-note">⚠ Low confidence — could you describe your mood in more detail?</span>
+                )}
+              </div>
+            </div>
+          )
+
+          if (msg.role === 'error') return (
+            <div key={i} className="message message-ai">
+              <div className="message-bubble error-bubble">⚠ {msg.text}</div>
+            </div>
+          )
+        })}
 
         {loading && (
           <div className="message message-ai">
-            <span className="message-bubble loading-bubble">
+            <div className="message-meta">MoodSync</div>
+            <div className="message-bubble loading-bubble">
               <span className="dot" /><span className="dot" /><span className="dot" />
-            </span>
+            </div>
           </div>
         )}
 
-        {showAiResponse && !loading && result && (
-          <div className="message message-ai">
-            <span className="message-bubble ai-response">
-              I found <strong>{result.recommendations.length} songs</strong> for your <strong>{result.mood.mood}</strong> mood.
-              {result.needs_clarification && (
-                <span className="clarify-note"> Could you tell me more about what you need?</span>
-              )}
-              <div className="mood-tags">
-                <span className="tag">energy {result.mood.energy}</span>
-                <span className="tag">valence {result.mood.valence}</span>
-                <span className="tag">{result.mood.genre_hint}</span>
-              </div>
-            </span>
-          </div>
-        )}
-
-        {error && (
-          <div className="message message-ai">
-            <span className="message-bubble error-bubble">⚠ {error}</span>
-          </div>
-        )}
+        <div ref={bottomRef} />
       </div>
 
       <div className="chat-input-area">
-        <textarea
-          className="chat-input"
-          placeholder="How are you feeling right now?"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          rows={2}
-          disabled={loading}
-        />
-        <button className="send-btn" onClick={handleSend} disabled={loading || !input.trim()}>
-          {loading ? '...' : '→'}
-        </button>
+        <div className="input-wrapper">
+          <textarea
+            className="chat-input"
+            placeholder="Describe how you're feeling..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            rows={1}
+            disabled={loading}
+          />
+          <button className="send-btn" onClick={handleSend} disabled={loading || !input.trim()}>
+            ↑
+          </button>
+        </div>
+        <div className="input-hint">Press Enter to send · Shift+Enter for new line</div>
       </div>
     </div>
   )

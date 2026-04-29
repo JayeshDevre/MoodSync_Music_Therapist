@@ -1,62 +1,141 @@
 .song-card {
-  display: flex;
-  gap: 14px;
-  background: #16161f;
-  border: 1px solid #2a2a3a;
-  border-radius: 14px;
-  padding: 16px;
-  transition: border-color 0.15s;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: all 0.2s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
 }
 
-.song-card:hover { border-color: #4a3a7a; }
-
-.song-rank {
-  font-size: 0.75rem;
-  color: #4a4a6a;
-  font-weight: 700;
-  min-width: 24px;
-  padding-top: 2px;
+.song-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.song-main { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.song-card:hover {
+  border-color: var(--border2);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
 
-.song-top {
+.song-card:hover::before { opacity: 1; }
+
+.song-card-top {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
-.song-info { display: flex; align-items: center; gap: 10px; }
+.song-rank-badge {
+  width: 28px; height: 28px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 
-.song-genre-icon { font-size: 1.4rem; }
+.song-rank-badge.top { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 
-.song-title { font-size: 0.95rem; font-weight: 600; color: #e8e8f0; }
-.song-artist { font-size: 0.78rem; color: #6b6b8a; margin-top: 2px; text-transform: capitalize; }
+.song-info { flex: 1; min-width: 0; }
+
+.song-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-artist {
+  font-size: 0.8rem;
+  color: var(--text2);
+}
+
+.song-genre-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  margin-top: 5px;
+}
 
 .confidence-badge {
-  padding: 3px 10px;
-  border-radius: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  border: 1px solid;
 }
+
+.conf-HIGH   { background: var(--green-bg);  color: var(--green);  border-color: #b7e4cc; }
+.conf-MEDIUM { background: var(--yellow-bg); color: var(--yellow); border-color: #f0d9a8; }
+.conf-LOW    { background: var(--red-bg);    color: var(--red);    border-color: #f5c6c2; }
 
 .song-explanation {
   font-size: 0.82rem;
-  color: #8888aa;
-  line-height: 1.55;
-  border-left: 2px solid #3a2a5a;
-  padding-left: 10px;
+  color: var(--text2);
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+  margin-bottom: 12px;
 }
 
 .song-stats {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
-.stat { display: flex; flex-direction: column; gap: 2px; }
-.stat-label { font-size: 0.68rem; color: #4a4a6a; text-transform: uppercase; letter-spacing: 0.05em; }
-.stat-value { font-size: 0.8rem; color: #a78bfa; font-weight: 600; }
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7px 6px;
+  border-right: 1px solid var(--border);
+  gap: 2px;
+}
+
+.stat:last-child { border-right: none; }
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
