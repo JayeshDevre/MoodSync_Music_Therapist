@@ -13,3 +13,15 @@ venv/
 
 # Pytest cache
 .pytest_cache/
+
+# Environment variables - never commit these
+.env
+*.env
+
+# Logs
+logs/
+*.jsonl
+
+# FAISS index (auto-generated, no need to commit)
+*.index
+faiss_index/

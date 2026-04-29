@@ -1,0 +1,41 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 28px;
+  background: #16161f;
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.logo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  color: #6b6b8a;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .app-body {
+    grid-template-columns: 1fr;
+  }
+}

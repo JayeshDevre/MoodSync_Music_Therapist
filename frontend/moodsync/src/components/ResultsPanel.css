@@ -1,0 +1,106 @@
+.results-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 57px);
+  overflow: hidden;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #2a2a3a;
+  background: #0f0f13;
+}
+
+.results-title { font-weight: 600; font-size: 0.95rem; color: #c4c4d8; }
+
+.results-meta { display: flex; gap: 8px; }
+
+.meta-badge {
+  background: #1e1e2e;
+  border: 1px solid #3a3a52;
+  color: #7c7ca8;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.meta-badge.retry { color: #f59e0b; border-color: #78350f; }
+
+.results-body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.songs-list {
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rag-panel {
+  border-left: 1px solid #2a2a3a;
+  padding: 20px 16px;
+  overflow-y: auto;
+  background: #0d0d16;
+}
+
+.rag-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7c7ca8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.rag-subtitle { font-size: 0.75rem; color: #4a4a6a; margin-bottom: 14px; }
+
+.rag-source {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #1a1a26;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.rag-source-name { font-size: 0.78rem; color: #a78bfa; text-transform: capitalize; }
+.rag-score { font-size: 0.72rem; color: #4a4a6a; }
+
+.mood-breakdown { margin-top: 4px; }
+
+.mood-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 0.78rem;
+  color: #6b6b8a;
+  border-bottom: 1px solid #1e1e2e;
+}
+
+.mood-row strong { color: #a78bfa; text-transform: capitalize; }
+.mood-row.reasoning { display: block; color: #4a4a6a; font-style: italic; padding-top: 10px; border: none; line-height: 1.5; }
+
+.mini-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 120px;
+}
+
+.mini-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.mini-bar-label { font-size: 0.72rem; color: #4a4a6a; min-width: 28px; }
